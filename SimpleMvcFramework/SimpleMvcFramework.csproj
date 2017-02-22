@@ -55,7 +55,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppStart.cs" />
+    <Compile Include="BindingModels\ReceiveMessageBindingModel.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Data\SharpStoreContext.cs" />
+    <Compile Include="Models\Knife.cs" />
+    <Compile Include="Models\Message.cs" />
     <Compile Include="MVC\Attributes\Methods\HttpGetAttribute.cs" />
     <Compile Include="MVC\Attributes\Methods\HttpMethodAttribute.cs" />
     <Compile Include="MVC\Attributes\Methods\HttpPostAttribute.cs" />
@@ -64,7 +68,9 @@
     <Compile Include="MVC\Interfaces\Generic\IActionResult.cs" />
     <Compile Include="MVC\Interfaces\Generic\IRenderable.cs" />
     <Compile Include="MVC\Interfaces\IActionResult.cs" />
+    <Compile Include="MVC\Interfaces\IHandleable.cs" />
     <Compile Include="MVC\Interfaces\IInvocable.cs" />
+    <Compile Include="MVC\Interfaces\IRedirectable.cs" />
     <Compile Include="MVC\Interfaces\IRenderable.cs" />
     <Compile Include="MVC\MvcContext.cs" />
     <Compile Include="MVC\MvcEngine.cs" />
@@ -73,6 +79,7 @@
     <Compile Include="MVC\ViewEngine\Generic\ActionResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RouteTable.cs" />
+    <Compile Include="ViewModels\ShowProductsViewModel.cs" />
     <Compile Include="Views\Home\About.cs" />
     <Compile Include="Views\Home\Contacts.cs" />
     <Compile Include="Views\Home\Index.cs" />
@@ -88,12 +95,7 @@
       <Name>SimpleHttpServer</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="BindingModels\" />
-    <Folder Include="Data\" />
-    <Folder Include="Models\" />
-    <Folder Include="ViewModels\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

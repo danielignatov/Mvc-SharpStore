@@ -1,18 +1,19 @@
-﻿using SimpleHttpServer.Enums;
-using SimpleHttpServer.Models;
-using SimpleMvcFramework.MVC.Attributes.Methods;
-using SimpleMvcFramework.MVC.Controllers;
-using SimpleMvcFramework.MVC.Extensions;
-using SimpleMvcFramework.MVC.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-
-namespace SimpleMvcFramework.MVC.Routers
+﻿namespace SimpleMVC.App.MVC.Routers
 {
-    public class ControllerRouter
+    using SimpleHttpServer.Enums;
+    using SimpleHttpServer.Models;
+    using SimpleMvcFramework.MVC;
+    using SimpleMvcFramework.MVC.Attributes.Methods;
+    using SimpleMvcFramework.MVC.Controllers;
+    using SimpleMvcFramework.MVC.Extensions;
+    using SimpleMvcFramework.MVC.Interfaces;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Net;
+    using System.Reflection;
+
+    public class ControllerRouter : IHandleable
     {
         private IDictionary<string, string> getParams;
         private IDictionary<string, string> postParams;
@@ -23,44 +24,48 @@ namespace SimpleMvcFramework.MVC.Routers
 
         private string[] controllerActionParams;
         private string[] controllerAction;
-
-        private HttpRequest request;
-        private HttpResponse response;
         public ControllerRouter()
         {
             this.getParams = new Dictionary<string, string>();
             this.postParams = new Dictionary<string, string>();
-            this.request = new HttpRequest();
-            this.response = new HttpResponse();
         }
         public HttpResponse Handle(HttpRequest request)
         {
-            this.request = request;
-            this.response = new HttpResponse();
-            this.ParseInput();
+            this.ParseInput(request);
+            //TODO check if there is session with given id and execute the method only if user is authorised
 
+            var method = this.GetMethod();
+            var controller = this.GetController();
             IInvocable result =
-                (IInvocable)this.GetMethod()
-                .Invoke(this.GetController(), this.methodParams);
+                (IInvocable)method
+                .Invoke(controller, this.methodParams);
 
-            if (string.IsNullOrEmpty(response.Header.Location))
+            string content = result.Invoke();
+            var response = new HttpResponse();
+
+            if (!string.IsNullOrEmpty(result.Location))
             {
+                response.Header.OtherParameters.Add("Location", result.Location);
+                response.StatusCode = ResponseStatusCode.Found;
+            }
+            else
+            {
+                response.ContentAsUTF8 = content;
                 response.StatusCode = ResponseStatusCode.Ok;
-                response.ContentAsUTF8 = result.Invoke();
             }
 
-            ClearParameters();
-
+            this.ClearRequestParameters();
             return response;
+
         }
 
-        private void ClearParameters()
+        private void ClearRequestParameters()
         {
-            this.getParams = new Dictionary<string, string>();
             this.postParams = new Dictionary<string, string>();
+            this.getParams = new Dictionary<string, string>();
         }
 
-        private void InitRequestMethod()
+        private void InitRequestMethod(HttpRequest request)
         {
             this.requestMethod = request.Method.ToString();
         }
@@ -75,9 +80,8 @@ namespace SimpleMvcFramework.MVC.Routers
             this.actionName = this.controllerAction[this.controllerAction.Length - 1].ToUpperFirst();
         }
 
-        public void ParseInput()
+        public void ParseInput(HttpRequest request)
         {
-
             string uri = WebUtility.UrlDecode(request.Url);
             string query = string.Empty;
             if (request.Url.Contains("?"))
@@ -102,9 +106,10 @@ namespace SimpleMvcFramework.MVC.Routers
             }
 
             //Retrieve POST parameters
-            string postParameters = WebUtility.UrlDecode(request.Content);
+            string postParameters = request.Content;
             if (postParameters != null)
             {
+                postParameters = WebUtility.UrlDecode(postParameters);
                 string[] pairs = postParameters.Split('&');
                 foreach (var pair in pairs)
                 {
@@ -113,7 +118,7 @@ namespace SimpleMvcFramework.MVC.Routers
                 }
             }
 
-            this.InitRequestMethod();
+            this.InitRequestMethod(request);
             this.InitControllerName();
             this.InitActionName();
 
@@ -130,32 +135,29 @@ namespace SimpleMvcFramework.MVC.Routers
             this.methodParams
                 = new object[parameters.Count()];
 
-
             int index = 0;
+
             foreach (ParameterInfo param in parameters)
             {
                 if (param.ParameterType.IsPrimitive)
                 {
                     object value = this.getParams[param.Name];
+
                     this.methodParams[index] = Convert.ChangeType(
                         value,
                         param.ParameterType
                         );
+
                     index++;
                 }
                 else if (param.ParameterType == typeof(HttpRequest))
                 {
-                    this.methodParams[index] = this.request;
+                    this.methodParams[index] = request;
                     index++;
                 }
                 else if (param.ParameterType == typeof(HttpSession))
                 {
-                    this.methodParams[index] = this.request.Session;
-                    index++;
-                }
-                else if (param.ParameterType == typeof(HttpResponse))
-                {
-                    this.methodParams[index] = this.response;
+                    this.methodParams[index] = request.Session;
                     index++;
                 }
                 else

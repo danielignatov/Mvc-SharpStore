@@ -1,24 +1,35 @@
-﻿using SimpleMvcFramework.MVC.Interfaces.Generic;
-using System;
-
-namespace SimpleMvcFramework.MVC.ViewEngine.Generic
+﻿namespace SimpleMvcFramework.MVC.ViewEngine.Generic
 {
+    using Interfaces.Generic;
+    using System;
+
     public class ActionResult<T> : IActionResult<T>
     {
+        #region Constructors
         public ActionResult(string viewFullQualifiedName, T model)
         {
-            this.Action =
-                (IRenderable<T>)Activator
-                .CreateInstance(Type.GetType(viewFullQualifiedName));
+            this.Action = (IRenderable<T>)Activator.CreateInstance(Type.GetType(viewFullQualifiedName));
 
-            this.Action.Model = model;
+            Action.Model = model;
         }
 
+        public ActionResult(string fullQualifedName, string location, T model) : this(fullQualifedName, model)
+        {
+            this.Location = location;
+        }
+        #endregion
+
+        #region Properties
         public IRenderable<T> Action { get; set; }
 
+        public string Location { get; private set; }
+        #endregion
+
+        #region Methods
         public string Invoke()
         {
             return this.Action.Render();
         }
+        #endregion
     }
 }

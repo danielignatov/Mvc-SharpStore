@@ -1,6 +1,8 @@
-﻿namespace SimpleMvcFramework.MVC.Interfaces
+﻿using SimpleMvsFramework.MVC.Interfaces;
+
+namespace SimpleMvcFramework.MVC.Interfaces
 {
-    public interface IInvocable 
+    public interface IInvocable : IRedirectable
     {
         string Invoke();
     }
